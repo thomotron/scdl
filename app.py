@@ -9,20 +9,25 @@ port = 2019
 creds = {
     
 }
+base_path = '/media/downloads/scdl/'
+type_paths = {
+    'like': base_path + 'likes/',
+    'post': base_path + 'posts/'
+}
 
 ##### Flask setup
 app = Flask(__name__)
 
 ##### Helper functions
 # YTDL helper
-def ytdl(url, filename):
+def ytdl(url, path):
     ytdl_opts = {
         'format': 'bestaudio/best',
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'wav'
         }],
-        'outtmpl': 'audio/' + filename + '.wav'
+        'outtmpl': path
     }
     with YoutubeDL(ytdl_opts) as ytdl:
         ytdl.download([url])
@@ -32,10 +37,18 @@ def ytdl(url, filename):
 @app.route('/', methods=["POST"])
 def download_uri():
     try:
+        # Make sure the request has the type set and we accept it
+        if not request.json['type'] or request.json['type'] not in type_paths.keys():
+            # Return bad request
+            return '', 400
+
         # Check if the request has valid credentials
         if request.json['source'] in creds and request.json['secret'] == creds[request.json['source']]:
-            # Download the URI through YTDL on a different thread
-            dlthread = Thread(target=ytdl, args=(request.json['uri'], request.json['name']))
+            # Format the filepath according to the request type
+            filepath = type_paths[request.json['type']] + request.json['name'] + '.wav'    
+
+            # Download the URI through YTDL on a different thread        
+            dlthread = Thread(target=ytdl, args=(request.json['uri'], filepath))
             dlthread.start()
 
             # Return successfully with no further content
