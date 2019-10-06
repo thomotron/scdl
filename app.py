@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 ##### Imports
+import os
+import stat
 from flask import Flask, request
 from youtube_dl import YoutubeDL
 from threading import Thread
@@ -31,6 +33,9 @@ def ytdl(url, path):
     }
     with YoutubeDL(ytdl_opts) as ytdl:
         ytdl.download([url])
+
+    # Set the file permissions to user: rw, group: r
+    os.chmod(path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
 
 ##### Routes
 # The only route we will ever need
