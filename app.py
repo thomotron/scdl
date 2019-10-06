@@ -50,7 +50,8 @@ def download_uri():
         # Check if the request has valid credentials
         if request.json['source'] in creds and request.json['secret'] == creds[request.json['source']]:
             # Format the filepath according to the request type
-            filepath = type_paths[request.json['type']] + request.json['name'] + '.wav'    
+            filename = request.json['name'].replace('/', '(slash)') + '.wav'
+            filepath = type_paths[request.json['type']] + filename
 
             # Download the URI through YTDL on a different thread        
             dlthread = Thread(target=ytdl, args=(request.json['uri'], filepath))
